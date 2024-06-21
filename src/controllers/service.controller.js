@@ -15,10 +15,12 @@ serviceCtrl.list = async (req, res) => {
 
 serviceCtrl.add = async (req, res) => {
   try {
-    const { name, ip } = req.body;
+    const { name, ip,statusService } = req.body;
+    
     const newService = new serviceModel({
       name,
       ip,
+      statusService: statusService !== undefined ? statusService : true,
     });
     req.file && newService.setImg(req.file.filename);
 

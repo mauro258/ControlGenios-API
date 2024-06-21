@@ -7,18 +7,19 @@ import { fileURLToPath } from "url";
 
 //routes
 import serviceRoutes from "./routes/service.route.js";
+
 connectDb();
+
+
 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-
-
 const app = express();
 
 app.set("Port", 4000);
-app.use("/public",express.static(__dirname + "/storage/imgs"))
+app.use("/public", express.static(__dirname + "/storage/imgs"));
 app.use(morgan("dev"));
 app.use(cors({ origin: "*" }));
 app.use(express.urlencoded({ extended: true }));
