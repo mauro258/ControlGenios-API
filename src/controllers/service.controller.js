@@ -1,4 +1,8 @@
 import { response } from "../helpers/Response.js";
+import {
+  deleteImageCloudinary,
+  uploadImageTocloudinary,
+} from "../helpers/cloudinary.actions.js";
 import { deleteImg } from "../helpers/deleteImg.js";
 import { serviceModel } from "../models/service.model.js";
 
@@ -15,14 +19,19 @@ serviceCtrl.list = async (req, res) => {
 
 serviceCtrl.add = async (req, res) => {
   try {
-    const { name, ip,statusService } = req.body;
-    
+    const { name, ip, statusService } = req.body;
+
     const newService = new serviceModel({
       name,
       ip,
       statusService: statusService !== undefined ? statusService : true,
     });
-    req.file && newService.setImg(req.file.filename);
+    //req.file && newService.setImg(req.file.filename);
+
+    if (req.file) {
+      const { secure_url, public_id } = await uploadImageTocloudinary(req.file);
+      newService.setImg({ secure_url, public_id });
+    }
 
     await serviceModel.create(newService);
     response(res, 201, true, newService, "created service");
@@ -40,14 +49,20 @@ serviceCtrl.update = async (req, res) => {
     }
 
     if (req.file) {
-      service.nameImage && deleteImg(service.nameImage);
-      service.setImg(req.file.filename);
-      
+      // service.nameImage && deleteImg(service.nameImage);
+      // service.setImg(req.file.filename);
+      if (service.public_id) {
+        await deleteImageCloudinary(service.public_id);
+      }
+
+      const { secure_url, public_id } = await uploadImageTocloudinary(req.file);
+      service.setImg({ secure_url, public_id });
+      await service.save();
     }
 
     await service.updateOne(req.body);
 
-    response(res, 200, true, service, "updated service");
+    response(res, 200, true, "", "updated service");
   } catch (error) {
     response(res, 500, false, "", error.message);
   }
@@ -60,7 +75,11 @@ serviceCtrl.delete = async (req, res) => {
     if (!service) {
       return response(res, 404, false, "", "service not found");
     }
-    service.nameImage && deleteImg(service.nameImage);
+    //service.nameImage && deleteImg(service.nameImage);
+
+    if (service.public_id) {
+      await deleteImageCloudinary(service.public_id);
+    }
 
     await service.deleteOne();
 

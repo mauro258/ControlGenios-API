@@ -21,7 +21,7 @@ const serviceSchema = new Schema(
     },
 
     imgUrl: { type: String, default: null },
-    nameImage: String,
+    public_id: String,
     statusService: {
       type: Boolean,
       required: [true, "The statusService field is required"],
@@ -34,10 +34,17 @@ const serviceSchema = new Schema(
   }
 );
 
-serviceSchema.methods.setImg = function setImg(filename) {
-  const url = "http://localhost:4000/public/";
-  this.imgUrl = url + filename;
-  this.nameImage = filename;
+// serviceSchema.methods.setImg = function setImg(filename) {
+//   const url = "http://localhost:4000/public/";
+//   this.imgUrl = url + filename;
+//   this.nameImage = filename;
+// };
+
+serviceSchema.methods.setImg = function setImg({secure_url,public_id}) {
+  
+  this.imgUrl = secure_url;
+  this.public_id = public_id;
 };
+
 
 export const serviceModel = model("service", serviceSchema);
