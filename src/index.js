@@ -4,14 +4,9 @@ import morgan from "morgan";
 import { connectDb } from "./database.js";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
-
+import { monitorServices } from "../scripts/monitoring.js";
 //routes
 import serviceRoutes from "./routes/service.route.js";
-
-connectDb();
-
-
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -27,6 +22,21 @@ app.use(express.json());
 
 app.use("/service", serviceRoutes);
 
-app.listen(app.get("Port"), () => {
-  console.log("server listening on port", app.get("Port"));
-});
+const startServer = async () => {
+  try {
+    await connectDb();
+
+    app.listen(app.get("Port"), () => {
+      console.log("Server listening on port", app.get("Port"));
+
+      setTimeout(() => {
+        monitorServices();
+        setInterval(monitorServices, 5 * 60 * 1000);
+      }, 5 * 60 * 1000);
+    });
+  } catch (error) {
+    console.error("Error connecting to database:", error.message);
+  }
+};
+
+startServer();
