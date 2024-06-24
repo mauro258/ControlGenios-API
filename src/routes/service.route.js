@@ -4,6 +4,7 @@ import { upload } from "../middleware/imgUpload.js";
 const route = Router();
 
 route.get("/", serviceCtrl.list);
+route.get("/:id", serviceCtrl.listOne);
 route.post("/", upload.single("img"), serviceCtrl.add);
 route.put("/:id", upload.single("img"), serviceCtrl.update);
 route.delete("/:id", serviceCtrl.delete);

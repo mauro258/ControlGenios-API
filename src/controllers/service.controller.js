@@ -17,6 +17,19 @@ serviceCtrl.list = async (req, res) => {
   }
 };
 
+serviceCtrl.listOne = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const service = await serviceModel.findById(id);
+    if (!service) {
+      return response(res, 404, false, "", "record not found");
+    }
+    response(res, 200, true, service, "service found");
+  } catch (error) {
+    response(res, 500, false, "", error.message);
+  }
+};
+
 serviceCtrl.add = async (req, res) => {
   try {
     const { name, ip, statusService } = req.body;
