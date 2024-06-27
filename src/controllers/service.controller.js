@@ -39,7 +39,7 @@ serviceCtrl.add = async (req, res) => {
       ip,
       statusService: statusService !== undefined ? statusService : true,
     });
-    //req.file && newService.setImg(req.file.filename);
+    
 
     if (req.file) {
       const { secure_url, public_id } = await uploadImageTocloudinary(req.file);
@@ -62,8 +62,6 @@ serviceCtrl.update = async (req, res) => {
     }
 
     if (req.file) {
-      // service.nameImage && deleteImg(service.nameImage);
-      // service.setImg(req.file.filename);
       if (service.public_id) {
         await deleteImageCloudinary(service.public_id);
       }
@@ -88,7 +86,7 @@ serviceCtrl.delete = async (req, res) => {
     if (!service) {
       return response(res, 404, false, "", "service not found");
     }
-    //service.nameImage && deleteImg(service.nameImage);
+    
 
     if (service.public_id) {
       await deleteImageCloudinary(service.public_id);

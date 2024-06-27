@@ -25,7 +25,7 @@ const serviceSchema = new Schema(
     statusService: {
       type: Boolean,
       required: [true, "The statusService field is required"],
-      default: true, 
+      default: false, 
     },
   },
 
@@ -34,11 +34,7 @@ const serviceSchema = new Schema(
   }
 );
 
-// serviceSchema.methods.setImg = function setImg(filename) {
-//   const url = "http://localhost:4000/public/";
-//   this.imgUrl = url + filename;
-//   this.nameImage = filename;
-// };
+
 
 serviceSchema.methods.setImg = function setImg({secure_url,public_id}) {
   
