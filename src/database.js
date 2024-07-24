@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
+import mysql from 'mysql2/promise'
+import { config } from './config.js'
 
-
-const uri = 'mongodb://127.0.0.1:27017/dbControlGenios';
-
-export const connectDb = async () => {try {const db=await mongoose.connect(uri);console.log('connected database',db.connection.name);} catch(error) {console.log('error connecting to database ${error.mesage}');}};
+export const connectDb = async () => {
+    try {
+        return await mysql.createConnection(config) && await console.log('CONNECT TO DATABASE ', config.database)
+    } catch (error) {
+        await console.log('error connecting to database ${error.mesage}');
+    }
+}

@@ -29,10 +29,10 @@ const startServer = async () => {
     app.listen(app.get("Port"), () => {
       console.log("Server listening on port", app.get("Port"));
 
-      setTimeout(() => {
-        monitorServices();
-        setInterval(monitorServices, 5 * 60 * 1000);
-      }, 5 * 60 * 1000);
+      // setTimeout(() => {
+      //   monitorServices();
+      //   setInterval(monitorServices, 5 * 60 * 1000);
+      // }, 5 * 60 * 1000);
     });
   } catch (error) {
     console.error("Error connecting to database:", error.message);
