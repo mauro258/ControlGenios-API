@@ -5,13 +5,16 @@ import {
 } from "../helpers/cloudinary.actions.js";
 import { deleteImg } from "../helpers/deleteImg.js";
 import { serviceModel } from "../models/service.model.js";
+import { connectDb } from "../database.js";
 
 const serviceCtrl = {};
 
 serviceCtrl.list = async (req, res) => {
   try {
-    const services = await serviceModel.find();
-    response(res, 200, true, services, "list of services");
+    const db = await connectDb()
+    const [rows] = await db.query("SELECT * FROM services;")
+    db.end()
+    response(res, 200, true, rows, "list of services");
   } catch (error) {
     response(res, 500, false, "", error.message);
   }
@@ -20,11 +23,14 @@ serviceCtrl.list = async (req, res) => {
 serviceCtrl.listOne = async (req, res) => {
   try {
     const { id } = req.params;
-    const service = await serviceModel.findById(id);
-    if (!service) {
+    const db = await connectDb()
+    const [row] = await db.query("SELECT * FROM services where id = ?;", id);
+    if (row.length <= 0) {
+      db.end()
       return response(res, 404, false, "", "record not found");
     }
-    response(res, 200, true, service, "service found");
+    db.end()
+    response(res, 200, true, row[0], "service found");
   } catch (error) {
     response(res, 500, false, "", error.message);
   }
@@ -34,20 +40,14 @@ serviceCtrl.add = async (req, res) => {
   try {
     const { name, ip, statusService } = req.body;
 
-    const newService = new serviceModel({
-      name,
-      ip,
-      statusService: statusService !== undefined ? statusService : true,
-    });
-    
+    const defaultImg = "https://res.cloudinary.com/dcnhhj8zq/image/upload/v1721855903/uaozz36habrrulaamvdx.jpg"
+    const { secure_url, public_id } = await uploadImageTocloudinary(req.file);
 
-    if (req.file) {
-      const { secure_url, public_id } = await uploadImageTocloudinary(req.file);
-      newService.setImg({ secure_url, public_id });
-    }
+    const db = await connectDb()
+    const responseSql = await db.query("INSERT INTO services (name, ip, imgUrl, idImgUrl, status) VALUES (?, ?, ?, ?, 1);", [name, ip, secure_url ? secure_url : defaultImg, public_id, statusService]);
+    db.end()
 
-    await serviceModel.create(newService);
-    response(res, 201, true, newService, "created service");
+    response(res, 201, true, responseSql, "created service");
   } catch (error) {
     response(res, 500, false, "", error.message);
   }
@@ -56,23 +56,34 @@ serviceCtrl.add = async (req, res) => {
 serviceCtrl.update = async (req, res) => {
   try {
     const { id } = req.params;
-    const service = await serviceModel.findById(id);
-    if (!service) {
-      return response(res, 404, false, "", "service not found");
+    const { name, ip } = req.body
+    const db = await connectDb()
+    let nameImgUrl = ""
+    let idImgUrl = ""
+
+
+    const [row] = await db.query("SELECT * FROM services where id = ?;", id);
+    nameImgUrl = row[0].imgUrl
+    idImgUrl = row[0].idImgUrl
+    if (row.length <= 0) {
+      db.end()
+      return response(res, 404, false, "", "record not found");
     }
+
+ 
 
     if (req.file) {
-      if (service.public_id) {
-        await deleteImageCloudinary(service.public_id);
+      if (row[0].idImgUrl) {
+        await deleteImageCloudinary(row[0].idImgUrl);
       }
-
       const { secure_url, public_id } = await uploadImageTocloudinary(req.file);
-      service.setImg({ secure_url, public_id });
-      await service.save();
+      nameImgUrl = secure_url
+      idImgUrl = public_id
     }
 
-    await service.updateOne(req.body);
-
+    // await service.updateOne(req.body);
+    const responseSql = await db.query("UPDATE services SET name = ?, ip = ?, imgUrl = ?, idImgUrl =? WHERE id = ?", [name, ip, nameImgUrl, idImgUrl, id]);
+    db.end()
     response(res, 200, true, "", "updated service");
   } catch (error) {
     response(res, 500, false, "", error.message);
@@ -82,21 +93,27 @@ serviceCtrl.update = async (req, res) => {
 serviceCtrl.delete = async (req, res) => {
   try {
     const { id } = req.params;
-    const service = await serviceModel.findById(id);
-    if (!service) {
-      return response(res, 404, false, "", "service not found");
+    const db = await connectDb()
+    const [row] = await db.query("SELECT * FROM services where id = ?;", id);
+    if (row.length <= 0) {
+      db.end()
+      return response(res, 404, false, "", "record not found");
     }
     
+    const responseSql = await db.query("DELETE FROM services WHERE id = ?;", id);
+    db.end()
 
-    if (service.public_id) {
-      await deleteImageCloudinary(service.public_id);
+    if (row[0].idImgUrl) {
+      await deleteImageCloudinary(row[0].idImgUrl);
     }
-
-    await service.deleteOne();
-
     response(res, 200, true, "", "service removed");
   } catch (error) {
+    console.log("error.message: ", error.message)
     response(res, 500, false, "", error.message);
   }
 };
+
+serviceCtrl.uploadFile = async(req, res) => {
+
+}
 export default serviceCtrl;

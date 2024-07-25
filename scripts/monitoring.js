@@ -6,37 +6,35 @@ import { connectDb } from "../src/database.js";
 
 export const monitorServices = async () => {
   try {
-    await connectDb();
+    const db = await connectDb()
+    const [services] = await db.query("SELECT * FROM services;")
+    db.end()
 
-    const services = await serviceModel.find();
-
-    for (const service of services) {
-      const { ip } = service;
-
+    services.map(async (item) =>{
       try {
-        const response = await axios.get(`http://${ip}`);
+        const response = await axios.get(`http://${item.ip}`);
         const isActive = response.status === 200;
+        if (item.status !== isActive) {
+          const db = await connectDb()
+          await db.query("UPDATE services SET status = ? where id = ?;", [isActive ? 1 : 0, item.id])
 
-        if (service.statusService !== isActive) {
-          service.statusService = isActive;
-          await service.save();
           console.log(
-            `Status updated for service ${service.name}: ${
+            `Status updated for service ${item.name}: ${
               isActive ? "Asset" : "Idle"
             }`
           );
         }
+        db.end()
       } catch (error) {
         console.error(
-          `Error checking status for service ${service.name}: ${error.message}`
+          `Error checking status for service ${item.name}: ${error.message}`
         );
       }
-    }
-
+    });
     console.log("Services monitored and updated correctly.");
   } catch (error) {
     console.error("Error when monitoring services:", error.message);
   } finally {
-    mongoose.disconnect();
+    console.error("closing bd connection");
   }
 };
