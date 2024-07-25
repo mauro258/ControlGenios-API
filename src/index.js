@@ -31,6 +31,7 @@ const startServer = async () => {
 
       setTimeout(() => {
         monitorServices();
+        // setInterval(monitorServices, 5000);
         setInterval(monitorServices, 5 * 60 * 1000);
       }, 5 * 60 * 1000);
     });
