@@ -5,17 +5,15 @@ import { serviceModel } from "../src/models/service.model.js";
 import { connectDb } from "../src/database.js";
 
 export const monitorServices = async () => {
+  const db = await connectDb()
   try {
-    const db = await connectDb()
     const [services] = await db.query("SELECT * FROM services;")
-    db.end()
 
     services.map(async (item) =>{
       try {
         const response = await axios.get(`http://${item.ip}`);
         const isActive = response.status === 200;
         if (item.status !== isActive) {
-          const db = await connectDb()
           await db.query("UPDATE services SET status = ? where id = ?;", [isActive ? 1 : 0, item.id])
 
           console.log(
@@ -24,7 +22,6 @@ export const monitorServices = async () => {
             }`
           );
         }
-        db.end()
       } catch (error) {
         console.error(
           `Error checking status for service ${item.name}: ${error.message}`
@@ -35,6 +32,7 @@ export const monitorServices = async () => {
   } catch (error) {
     console.error("Error when monitoring services:", error.message);
   } finally {
+    db.end()
     console.error("closing bd connection");
   }
 };
